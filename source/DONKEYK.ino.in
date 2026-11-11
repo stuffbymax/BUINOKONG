@@ -1,0 +1,612 @@
+/*
+ * DONKEYK - miniature Donkey Kong (arcade level 1) for the original MAKERbuino
+ *           / Gamebuino Classic  (ATmega328P, 84x48 PCD8544 LCD, 3 buttons + D-pad)
+ *
+ * Library : Gamebuino Classic 0.5.2 (Arduino Library Manager: "Gamebuino Classic")
+ * Board   : Arduino/Genuino Uno (ATmega328P @ 16 MHz) - export the *standard* HEX
+ *           (NOT the "with_bootloader" one) and rename it DONKEYK.HEX
+ *
+ * Design notes
+ *  - No dynamic memory, no big RAM arrays: all graphics live in PROGMEM.
+ *  - Positions are fixed point (1/8 pixel) in int16_t; no floating point at all.
+ *  - Playfield is generated from a tiny table (6 girders + Pauline's ledge),
+ *    so there is no tile map in RAM.
+ *  - High score: EEPROM bytes 0..2.  The Gamebuino loader mirrors EEPROM to
+ *    DONKEYK.SAV when you return to the loader (C+A hold, or C on title).
+ *
+ * Original sprites / code, written for this project. Not affiliated with
+ * Nintendo. "Donkey Kong" is a Nintendo trademark; this is a fan homage.
+ * Released under LGPL-3.0-or-later to match the Gamebuino library.
+ */
+#include <SPI.h>
+#include <Gamebuino.h>
+#include <EEPROM.h>
+
+Gamebuino gb;
+
+extern const byte font3x5[];
+extern const byte font5x7[];
+
+//@@SPRITES@@
+
+// =====================================================================
+//  Constants
+// =====================================================================
+#define FPS            25
+#define NGIRD          6          // girders 0 (bottom) .. 5 (Donkey Kong's)
+#define LEDGE          6          // level index of Pauline's ledge
+#define MAXB           8          // max simultaneous barrels
+#define SPLIT_X        42         // x where girder surface steps by 1 px
+
+#define WALK_SPD       11         // 1/8 px per frame
+#define CLIMB_SPD      4
+#define JUMP_V         14         // initial upward velocity (1/8 px/frame)
+#define GRAVITY        2
+
+#define MARIO_W        5
+#define MARIO_H        5
+#define START_X        14
+#define PAULINE_X      48
+
+#define EE_MAGIC       0xD4
+
+// game states
+enum { S_TITLE, S_HELP, S_READY, S_PLAY, S_DYING, S_WIN, S_PAUSE, S_OVER };
+// Mario modes
+enum { M_WALK, M_JUMP, M_CLIMB };
+// barrel states
+enum { B_OFF, B_ROLL, B_FALL, B_LADDER };
+
+// ---- level geometry (PROGMEM) -------------------------------------------
+const uint8_t GBASE[NGIRD] PROGMEM = { 46, 39, 32, 25, 18, 11 };
+
+// Ladders: {girder gap g (joins level g and g+1), centre x}
+#define NLAD 11
+const uint8_t LADDERS[NLAD][2] PROGMEM = {
+  {0, 62}, {0, 28},
+  {1, 16}, {1, 52},
+  {2, 66}, {2, 30},
+  {3, 14}, {3, 50},
+  {4, 62}, {4, 26},
+  {5, 36}
+};
+
+// Title screen: Mario hop arc
+const uint8_t HOP[14] PROGMEM = { 0,1,3,4,5,5,5,5,5,4,3,1,0,0 };
+
+// =====================================================================
+//  State (all small; total game RAM is well under 200 bytes)
+// =====================================================================
+struct Mario {
+  int16_t x8;        // left edge, 1/8 px
+  int16_t y8;        // foot line (girder row), 1/8 px
+  int16_t vy;
+  int8_t  vx;        // horizontal direction while airborne
+  uint8_t lev;       // girder level
+  uint8_t mode;
+  uint8_t left;      // facing left?
+  uint8_t anim;
+  uint8_t lad;       // ladder index when climbing
+};
+
+struct Barrel {
+  int16_t x8;        // left edge, 1/8 px
+  int8_t  y;         // top row
+  uint8_t lev;
+  uint8_t st;
+  uint8_t lad;       // last ladder index tested (+1)
+  uint8_t scored;
+};
+
+Mario  m;
+Barrel bar[MAXB];
+
+uint8_t  state;
+uint8_t  timer;            // generic state timer
+uint8_t  lives;
+uint8_t  lvl;              // difficulty / level number (1..)
+uint16_t score;
+uint16_t hiScore;
+uint16_t bonus;
+uint8_t  spawnT;           // frames until DK throws next barrel
+uint8_t  throwT;           // frames of "throw" pose left
+uint8_t  newHi;
+uint8_t  extraLife;
+uint8_t  pauseDelay;
+uint16_t winBonus;
+
+// =====================================================================
+//  Level geometry helpers
+// =====================================================================
+static int8_t surf(uint8_t k, int8_t x) {
+  if (k >= LEDGE) return 5;
+  uint8_t t = (x >= SPLIT_X) ? 1 : 0;
+  return (int8_t)pgm_read_byte(&GBASE[k]) + ((k & 1) ? t : (1 - t));
+}
+static int8_t xmin(uint8_t k) { return (k == LEDGE) ? 30 : ((k & 1) || k == 0) ? 0 : 6; }
+static int8_t xmax(uint8_t k) { return (k == LEDGE) ? 56 : ((k & 1) ? 77 : 83); }
+static int8_t rollDir(uint8_t k) { return (k & 1) ? 1 : -1; }
+static uint8_t ladG(uint8_t i)  { return pgm_read_byte(&LADDERS[i][0]); }
+static uint8_t ladX(uint8_t i)  { return pgm_read_byte(&LADDERS[i][1]); }
+
+// =====================================================================
+//  Small utilities
+// =====================================================================
+static void addScore(uint16_t n) {
+  uint32_t s = (uint32_t)score + n;
+  score = (s > 65535UL) ? 65535 : (uint16_t)s;
+  if (!extraLife && score >= 7000) {            // classic: bonus life at 7000
+    extraLife = 1;
+    if (lives < 9) lives++;
+    gb.sound.playOK();
+  }
+}
+
+static void loadHi() {
+  if (EEPROM.read(0) == EE_MAGIC)
+    hiScore = EEPROM.read(1) | ((uint16_t)EEPROM.read(2) << 8);
+  else
+    hiScore = 0;
+}
+static void saveHi() {
+  EEPROM.write(0, EE_MAGIC);
+  EEPROM.write(1, hiScore & 0xFF);
+  EEPROM.write(2, hiScore >> 8);
+}
+
+static void sfx(uint8_t pitch, uint8_t dur) { gb.sound.playNote(pitch, dur, 0); }
+
+// 5-digit zero-padded number with the 3x5 font
+static void drawNum(int8_t x, int8_t y, uint16_t v, uint8_t digits) {
+  for (int8_t i = digits - 1; i >= 0; i--) {
+    gb.display.drawChar(x + i * 4, y, '0' + (v % 10), 1);
+    v /= 10;
+  }
+}
+static void text(int8_t x, int8_t y, const __FlashStringHelper* s) {
+  gb.display.cursorX = x;
+  gb.display.cursorY = y;
+  gb.display.print(s);
+}
+// text centred horizontally (3x5 font: 4 px per glyph)
+static void textC(int8_t y, const __FlashStringHelper* s) {
+  uint8_t n = strlen_P((const char*)s);
+  text((LCDWIDTH - n * 4 + 1) / 2, y, s);
+}
+static void clearRect(int8_t x, int8_t y, int8_t w, int8_t h) {
+  gb.display.setColor(WHITE);
+  gb.display.fillRect(x, y, w, h);
+  gb.display.setColor(BLACK);
+}
+
+// =====================================================================
+//  Game flow
+// =====================================================================
+static void startLife() {
+  for (uint8_t i = 0; i < MAXB; i++) bar[i].st = B_OFF;
+  m.lev = 0; m.mode = M_WALK; m.vy = 0; m.vx = 0; m.left = 0; m.anim = 0;
+  m.x8 = START_X * 8;
+  m.y8 = surf(0, START_X + 2) * 8;
+  spawnT = 45; throwT = 0;
+  bonus = 1000 + 100 * (lvl < 10 ? lvl : 10);
+  state = S_READY; timer = FPS * 2;
+}
+static void newGame() {
+  score = 0; lives = 3; lvl = 1; newHi = 0; extraLife = 0;
+  startLife();
+}
+static void gameOver() {
+  newHi = 0;
+  if (score > hiScore) { hiScore = score; saveHi(); newHi = 1; }
+  state = S_OVER; timer = 0;
+  sfx(4, 12);
+}
+
+// =====================================================================
+//  Barrels
+// =====================================================================
+static uint8_t barrelSpeed() { return 6 + (lvl < 7 ? lvl : 7); }              // 1/8 px/frame
+static uint8_t spawnGap()    { uint8_t g = (lvl < 7) ? 100 - 10 * lvl : 30; return g; }
+
+static void spawnBarrel() {
+  for (uint8_t i = 0; i < MAXB; i++) if (bar[i].st == B_OFF) {
+    bar[i].st = B_ROLL; bar[i].lev = 5; bar[i].lad = 0; bar[i].scored = 0;
+    bar[i].x8 = 22 * 8;
+    bar[i].y  = surf(5, 24) - 4;
+    return;
+  }
+}
+
+static void updateBarrels() {
+  uint8_t spd = barrelSpeed();
+  for (uint8_t i = 0; i < MAXB; i++) {
+    Barrel &b = bar[i];
+    if (b.st == B_OFF) continue;
+    int8_t cx = (b.x8 >> 3) + 2;                    // centre x
+
+    if (b.st == B_ROLL) {
+      b.x8 += rollDir(b.lev) * spd;
+      cx = (b.x8 >> 3) + 2;
+      b.y = surf(b.lev, cx) - 4;
+
+      if (b.lev == 0 && cx <= 3) { b.st = B_OFF; continue; }       // into the oil drum
+      if (b.lev > 0) {
+        if ((rollDir(b.lev) > 0 && cx > xmax(b.lev)) ||
+            (rollDir(b.lev) < 0 && cx < xmin(b.lev))) { b.st = B_FALL; continue; }
+        // sometimes take a ladder down
+        for (uint8_t k = 0; k < NLAD; k++) {
+          if (ladG(k) + 1 != b.lev) continue;
+          int8_t d = cx - (int8_t)ladX(k);
+          if (d >= -1 && d <= 1 && b.lad != k + 1) {
+            b.lad = k + 1;
+            uint8_t chance = 15 + 8 * lvl; if (chance > 50) chance = 50;
+            if (random(100) < chance) {
+              b.st = B_LADDER;
+              b.x8 = ((int16_t)ladX(k) - 2) * 8;
+            }
+          }
+        }
+      }
+    } else if (b.st == B_FALL) {
+      b.y += 2;
+      b.x8 += rollDir(b.lev) * 3;
+      cx = (b.x8 >> 3) + 2;
+      int8_t s = surf(b.lev - 1, cx);
+      if (b.y + 4 >= s) {
+        b.lev--; b.y = s - 4; b.st = B_ROLL; b.lad = 0;
+        if (b.lev == 0 && cx <= 3) b.st = B_OFF;
+      }
+    } else { // B_LADDER
+      b.y += 1;
+      int8_t s = surf(b.lev - 1, cx);
+      if (b.y + 4 >= s) {
+        b.lev--; b.y = s - 4; b.st = B_ROLL; b.lad = 0;
+      }
+    }
+  }
+}
+
+// =====================================================================
+//  Mario
+// =====================================================================
+static int8_t marioCx() { return (m.x8 >> 3) + 2; }
+
+static int8_t findLadder(uint8_t gap, int8_t cx) {
+  for (uint8_t k = 0; k < NLAD; k++)
+    if (ladG(k) == gap) {
+      int8_t d = cx - (int8_t)ladX(k);
+      if (d >= -2 && d <= 2) return k;
+    }
+  return -1;
+}
+
+static void clampMario() {
+  int16_t lo = (int16_t)xmin(m.lev) * 8, hi = ((int16_t)xmax(m.lev) - (MARIO_W - 1)) * 8;
+  if (m.x8 < lo) m.x8 = lo;
+  if (m.x8 > hi) m.x8 = hi;
+}
+
+static void updateMario() {
+  bool L = gb.buttons.repeat(BTN_LEFT, 1),  R = gb.buttons.repeat(BTN_RIGHT, 1);
+  bool U = gb.buttons.repeat(BTN_UP, 1),    D = gb.buttons.repeat(BTN_DOWN, 1);
+  int8_t dx = (R ? 1 : 0) - (L ? 1 : 0);
+
+  if (m.mode == M_WALK) {
+    m.vx = dx;                                   // also used as 'is walking' flag
+    if (dx) {
+      m.x8 += dx * WALK_SPD; m.left = (dx < 0);
+      clampMario(); m.anim++;
+    }
+    m.y8 = surf(m.lev, marioCx()) * 8;
+    if (gb.buttons.pressed(BTN_A) || gb.buttons.pressed(BTN_B)) {
+      m.mode = M_JUMP; m.vy = -JUMP_V; m.vx = dx;
+      sfx(24, 3);
+    } else if (U || D) {
+      int8_t k = -1;
+      if (U) k = findLadder(m.lev, marioCx());                       // up from here
+      else if (m.lev > 0) k = findLadder(m.lev - 1, marioCx());      // down from the top
+      if (k >= 0) {
+        m.mode = M_CLIMB; m.lad = k; m.anim = 0;
+        m.x8 = ((int16_t)ladX(k) - 2) * 8;
+        m.lev = ladG(k);                                           // 'lev' = ladder's lower level
+        int8_t cx = ladX(k);
+        // if we entered from the top girder, start at the top of the ladder
+        if (!U) m.y8 = surf(m.lev + 1, cx) * 8; else m.y8 = surf(m.lev, cx) * 8;
+      }
+    }
+  } else if (m.mode == M_JUMP) {
+    m.x8 += m.vx * WALK_SPD; clampMario();
+    m.y8 += m.vy; m.vy += GRAVITY;
+    int16_t floorY = (int16_t)surf(m.lev, marioCx()) * 8;
+    if (m.vy > 0 && m.y8 >= floorY) { m.y8 = floorY; m.mode = M_WALK; sfx(8, 1); }
+  } else { // M_CLIMB
+    int8_t dy = (D ? 1 : 0) - (U ? 1 : 0);
+    if (dy) {
+      int8_t cx = ladX(m.lad);
+      m.y8 += dy * CLIMB_SPD; m.anim++;
+      int16_t top = (int16_t)surf(m.lev + 1, cx) * 8, bot = (int16_t)surf(m.lev, cx) * 8;
+      if (m.y8 <= top) { m.y8 = top; m.lev++; m.mode = M_WALK; }
+      else if (m.y8 >= bot) { m.y8 = bot; m.mode = M_WALK; }
+      if ((m.anim & 3) == 0) sfx(14 + (m.anim >> 2 & 1) * 2, 1);
+    }
+  }
+}
+
+// =====================================================================
+//  Collision / scoring
+// =====================================================================
+static bool hitBarrel() {
+  int8_t footY = m.y8 >> 3;
+  int8_t mx = (m.x8 >> 3) + 1, my = footY - 4;               // 3x4 hit-box
+  for (uint8_t i = 0; i < MAXB; i++) {
+    if (bar[i].st == B_OFF) continue;
+    int8_t bx = (bar[i].x8 >> 3) + 1, by = bar[i].y + 1;      // 2x3 hit-box
+    if (mx < bx + 2 && mx + 3 > bx && my < by + 3 && my + 4 > by) return true;
+  }
+  return false;
+}
+
+static void scoreJumps() {
+  if (m.mode != M_JUMP) return;
+  int8_t footY = m.y8 >> 3, cx = marioCx();
+  for (uint8_t i = 0; i < MAXB; i++) {
+    Barrel &b = bar[i];
+    if (b.st != B_ROLL || b.scored || b.lev != m.lev) continue;
+    int8_t d = cx - ((b.x8 >> 3) + 2);
+    if (d >= -3 && d <= 3 && footY <= b.y + 1) {                 // feet above the barrel's top
+      b.scored = 1; addScore(100); sfx(30, 2);
+    }
+  }
+}
+
+// =====================================================================
+//  Drawing
+// =====================================================================
+static void drawGirders() {
+  for (uint8_t k = 0; k < NGIRD; k++) {
+    int8_t a = xmin(k), z = xmax(k);
+    if (a < SPLIT_X) gb.display.drawFastHLine(a, surf(k, a), SPLIT_X - a);
+    gb.display.drawFastHLine(SPLIT_X, surf(k, SPLIT_X), z - SPLIT_X + 1);
+  }
+  gb.display.drawFastHLine(30, 5, 27);                       // Pauline's ledge
+}
+
+static void drawLadders() {
+  for (uint8_t k = 0; k < NLAD; k++) {
+    int8_t cx = ladX(k), g = ladG(k);
+    int8_t top = surf(g + 1, cx), bot = surf(g, cx);
+    gb.display.drawFastVLine(cx - 2, top, bot - top);
+    gb.display.drawFastVLine(cx + 2, top, bot - top);
+    for (int8_t y = top + 1; y < bot; y += 2) gb.display.drawFastHLine(cx - 2, y, 5);
+  }
+}
+
+static void drawMario(bool visible) {
+  if (!visible) return;
+  const uint8_t* s;
+  if (m.mode == M_JUMP) s = spr_mario_jump;
+  else if (m.mode == M_CLIMB) s = (m.anim & 4) ? spr_mario_climb1 : spr_mario_climb2;
+  else {
+    uint8_t a = m.vx ? (m.anim >> 1) % 3 : 0;
+    s = (a == 0) ? spr_mario_stand : (a == 1) ? spr_mario_walk1 : spr_mario_walk2;
+  }
+  int8_t x = m.x8 >> 3, y = (m.y8 >> 3) - MARIO_H;
+  if (m.left && m.mode != M_CLIMB) gb.display.drawBitmap(x, y, s, NOROT, FLIPH);
+  else gb.display.drawBitmap(x, y, s);
+}
+
+static void drawScene(bool marioVisible) {
+  gb.display.setColor(BLACK);
+  drawGirders();
+  drawLadders();
+
+  // oil drum + flame
+  gb.display.drawBitmap(0, 41, spr_drum);
+  if (gb.frameCount & 4) { gb.display.drawPixel(2, 39); gb.display.drawPixel(3, 40); gb.display.drawPixel(2, 40); }
+  else                   { gb.display.drawPixel(3, 39); gb.display.drawPixel(2, 40); gb.display.drawPixel(3, 40); }
+
+  // DK's barrel stack (3 upright barrels) and Donkey Kong
+  gb.display.drawBitmap(0, 7, spr_barrel0);
+  gb.display.drawBitmap(4, 7, spr_barrel0);
+  gb.display.drawBitmap(2, 3, spr_barrel0);
+  const uint8_t* dk = spr_dk_idle;
+  if (throwT) dk = spr_dk_throw;
+  else if (spawnT < 14 && state == S_PLAY) dk = spr_dk_grab;
+  else if (gb.frameCount & 16) dk = spr_dk_grab;
+  gb.display.drawBitmap(9, 3, dk);
+  if (spawnT < 14 && state == S_PLAY && !throwT) gb.display.drawBitmap(21, 7, spr_barrel0);
+
+  // Pauline
+  gb.display.drawBitmap(PAULINE_X, 0, (gb.frameCount & 8) ? spr_pauline0 : spr_pauline1);
+
+  // barrels
+  for (uint8_t i = 0; i < MAXB; i++) {
+    if (bar[i].st == B_OFF) continue;
+    uint8_t f = (gb.frameCount >> 2) & 3;
+    if (rollDir(bar[i].lev) < 0) f = 3 - f;
+    const uint8_t* s = (f == 0) ? spr_barrel0 : (f == 1) ? spr_barrel1 : (f == 2) ? spr_barrel2 : spr_barrel3;
+    gb.display.drawBitmap(bar[i].x8 >> 3, bar[i].y, s);
+  }
+
+  drawMario(marioVisible);
+
+  // HUD: lives + score (top right)
+  gb.display.drawBitmap(57, 0, spr_icon);
+  gb.display.drawChar(61, 0, '0' + lives, 1);
+  drawNum(64, 0, score, 5);
+}
+
+// overlay box helper
+static void box(int8_t x, int8_t y, int8_t w, int8_t h) {
+  clearRect(x, y, w, h);
+  gb.display.drawRect(x, y, w, h);
+}
+
+// =====================================================================
+//  State handlers
+// =====================================================================
+static void doTitle() {
+  gb.battery.show = true;
+  gb.display.setFont(font5x7);
+  text(9, 1, F("DONKEY KONG"));
+  text(10, 1, F("DONKEY KONG"));
+  gb.display.setFont(font3x5);
+
+  // little scene: DK (2x) throws a barrel, Mario hops over it
+  gb.display.drawFastHLine(0, 30, 84);
+  gb.display.drawBitmap(4, 13, spr_dk_big);
+  uint8_t cyc = gb.frameCount % 64;
+  int8_t bx = 26 + cyc;
+  gb.display.drawBitmap(bx, 26, (cyc & 4) ? spr_barrel0 : spr_barrel2);
+  int8_t hop = (cyc >= 26 && cyc < 40) ? pgm_read_byte(&HOP[cyc - 26]) : 0;
+  gb.display.drawBitmap(62, 25 - hop, hop ? spr_mario_jump : spr_mario_stand, NOROT, FLIPH);
+  gb.display.drawBitmap(76, 25, (gb.frameCount & 16) ? spr_pauline0 : spr_pauline1);
+
+  // hi-score + prompts
+  text(14, 33, F("HI-SCORE"));
+  drawNum(48, 33, hiScore, 5);
+  if ((gb.frameCount & 31) < 22) text(0, 41, F("A:PLAY B:KEYS C:EXIT"));
+
+  if (gb.buttons.pressed(BTN_A)) { gb.sound.playOK(); gb.battery.show = false; newGame(); }
+  else if (gb.buttons.pressed(BTN_B)) { gb.sound.playTick(); state = S_HELP; }
+  else if (gb.buttons.pressed(BTN_C)) gb.changeGame();
+}
+
+static void doHelp() {
+  gb.battery.show = false;
+  text(0, 0,  F("= CONTROLS ="));
+  text(0, 7,  F("LEFT/RIGHT: WALK"));
+  text(0, 13, F("UP/DOWN: CLIMB"));
+  text(0, 19, F("A OR B: JUMP"));
+  text(0, 25, F("C: PAUSE"));
+  text(0, 31, F("HOLD C+A: LOADER"));
+  text(0, 37, F("JUMP BARRELS +100"));
+  if ((gb.frameCount & 31) < 22) text(0, 43, F("SAVE PAULINE! A:BACK"));
+  if (gb.buttons.pressed(BTN_A) || gb.buttons.pressed(BTN_B) || gb.buttons.pressed(BTN_C)) {
+    gb.sound.playTick(); state = S_TITLE;
+  }
+}
+
+static void doReady() {
+  drawScene(true);
+  box(18, 17, 48, 17);
+  text(26, 20, F("LEVEL"));
+  drawNum(52, 20, lvl, (lvl >= 10) ? 2 : 1);
+  if (timer > FPS) textC(27, F("GET READY")); else textC(27, F("GO!"));
+  if (--timer == 0) state = S_PLAY;
+}
+
+static void doPlay() {
+  if (gb.buttons.pressed(BTN_C)) { state = S_PAUSE; pauseDelay = 3; sfx(20, 2); drawScene(true); return; }
+
+  updateMario();
+  updateBarrels();
+
+  // Donkey Kong throws
+  if (throwT) throwT--;
+  if (spawnT) spawnT--;
+  else {
+    spawnBarrel(); throwT = 8; sfx(6, 2);
+    uint8_t g = spawnGap();
+    spawnT = g + random(20);
+  }
+
+  scoreJumps();
+
+  if ((gb.frameCount & 7) == 0 && bonus) bonus -= (bonus >= 10) ? 10 : bonus;
+
+  if (hitBarrel()) {                       // ouch
+    state = S_DYING; timer = 60; m.mode = M_WALK;
+    drawScene(true);
+    return;
+  }
+  // rescued?
+  if (m.lev == LEDGE && m.mode == M_WALK && ((m.x8 >> 3) + 4) >= PAULINE_X - 1) {
+    winBonus = bonus;
+    addScore(1000 + bonus);
+    state = S_WIN; timer = FPS * 3;
+    drawScene(true);
+    return;
+  }
+  drawScene(true);
+}
+
+static void doDying() {
+  drawScene((timer & 4) == 0);
+  if (timer % 6 == 0) sfx(24 - (60 - timer) / 4, 3);
+  if (--timer == 0) {
+    if (lives > 0) lives--;
+    if (lives == 0) gameOver(); else startLife();
+  }
+}
+
+static void doWin() {
+  drawScene(true);
+  // heart between Mario and Pauline + banner
+  gb.display.drawPixel(PAULINE_X - 4, 0); gb.display.drawPixel(PAULINE_X - 2, 0);
+  gb.display.drawFastHLine(PAULINE_X - 5, 1, 5); gb.display.drawFastHLine(PAULINE_X - 4, 2, 3);
+  gb.display.drawPixel(PAULINE_X - 3, 3);
+  box(14, 17, 56, 22);
+  textC(20, F("RESCUED!"));
+  text(20, 27, F("BONUS"));
+  drawNum(42, 27, winBonus, 5);
+  if (timer % 8 == 0) sfx(18 + (FPS * 3 - timer) / 8 * 2 % 14, 3);
+  if (--timer == 0) { lvl++; startLife(); }
+}
+
+static void doPause() {
+  drawScene(true);
+  box(5, 14, 74, 22);
+  textC(17, F("PAUSED"));
+  textC(24, F("C:RESUME B:QUIT"));
+  if (pauseDelay) pauseDelay--;
+  else if (gb.buttons.pressed(BTN_C)) { state = S_PLAY; sfx(20, 2); }
+  if (gb.buttons.pressed(BTN_B)) { state = S_TITLE; if (score > hiScore) { hiScore = score; saveHi(); } }
+}
+
+static void doOver() {
+  for (uint8_t i = 0; i < MAXB; i++) bar[i].st = B_OFF;
+  gb.display.fontSize = 2;
+  text(6, 2, F("GAME"));
+  text(6, 12, F("OVER"));
+  gb.display.fontSize = 1;
+  text(52, 3, F("SCORE"));
+  drawNum(52, 10, score, 5);
+  text(52, 18, F("BEST"));
+  drawNum(52, 25, hiScore, 5);
+  if (newHi && (gb.frameCount & 8)) textC(32, F("NEW HIGH SCORE!"));
+  if (timer < 255) timer++;
+  if (timer > 40 && (gb.frameCount & 31) < 22) textC(41, F("A:AGAIN  B:MENU"));
+  if (timer > 40) {
+    if (gb.buttons.pressed(BTN_A)) { gb.sound.playOK(); newGame(); }
+    else if (gb.buttons.pressed(BTN_B)) { gb.sound.playTick(); state = S_TITLE; }
+  }
+}
+
+// =====================================================================
+//  Arduino entry points
+// =====================================================================
+void setup() {
+  gb.begin();
+  gb.setFrameRate(FPS);
+  gb.pickRandomSeed();
+  gb.battery.show = true;
+  loadHi();
+  state = S_TITLE;
+  for (uint8_t i = 0; i < MAXB; i++) bar[i].st = B_OFF;
+  lives = 3; lvl = 1; score = 0; spawnT = 255; throwT = 0;
+}
+
+void loop() {
+  if (!gb.update()) return;
+  switch (state) {
+    case S_TITLE: doTitle(); break;
+    case S_HELP:  doHelp();  break;
+    case S_READY: doReady(); break;
+    case S_PLAY:  doPlay();  break;
+    case S_DYING: doDying(); break;
+    case S_WIN:   doWin();   break;
+    case S_PAUSE: doPause(); break;
+    case S_OVER:  doOver();  break;
+  }
+}

@@ -1,0 +1,99 @@
+In file included from /home/claude/dk/../Gamebuino/Gamebuino.h:28:0,
+                 from /home/claude/dk/build/sketch/DONKEYK.cpp:23:
+/home/claude/dk/../Gamebuino/utility/Display.h: In member function 'void Display::drawPixel(int8_t, int8_t)':
+/home/claude/dk/../Gamebuino/utility/Display.h:184:55: warning: suggest parentheses around comparison in operand of '^' [-Wparentheses]
+   if(((frameCount & 0x01) ^ ((x & 0x01) ^ (y & 0x01)) == 0)){ //alternative checkers pattern
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+In file included from /home/claude/dk/../Gamebuino/Gamebuino.h:28:0,
+                 from /home/claude/dk/../Gamebuino/Gamebuino.cpp:20:
+/home/claude/dk/../Gamebuino/utility/Display.h: In member function 'void Display::drawPixel(int8_t, int8_t)':
+/home/claude/dk/../Gamebuino/utility/Display.h:184:55: warning: suggest parentheses around comparison in operand of '^' [-Wparentheses]
+   if(((frameCount & 0x01) ^ ((x & 0x01) ^ (y & 0x01)) == 0)){ //alternative checkers pattern
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+In file included from /home/claude/dk/../Gamebuino/utility/Display.cpp:52:0:
+/home/claude/dk/../Gamebuino/utility/Display.h: In member function 'void Display::drawPixel(int8_t, int8_t)':
+/home/claude/dk/../Gamebuino/utility/Display.h:184:55: warning: suggest parentheses around comparison in operand of '^' [-Wparentheses]
+   if(((frameCount & 0x01) ^ ((x & 0x01) ^ (y & 0x01)) == 0)){ //alternative checkers pattern
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
+In file included from /home/claude/dk/../Gamebuino/utility/Sound.h:23:0,
+                 from /home/claude/dk/../Gamebuino/utility/Sound.cpp:20:
+/home/claude/dk/../Gamebuino/utility/Sound.cpp: In member function 'void Sound::command(uint8_t, uint8_t, int8_t, uint8_t)':
+/home/claude/dk/../ArduinoCore-avr/cores/arduino/Arduino.h:95:39: warning: comparison is always false due to limited range of data type [-Wtype-limits]
+ #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+                                  ~~~~~^~~~~~
+/home/claude/dk/../Gamebuino/utility/Sound.cpp:274:10: note: in expansion of macro 'constrain'
+      X = constrain(X, 0, 10);
+          ^~~~~~~~~
+AVR Memory Usage
+----------------
+Device: atmega328p
+
+Program:   16700 bytes (51.0% Full)
+(.text + .data + .bootloader)
+
+Data:        776 bytes (37.9% Full)
+(.data + .bss + .noinit)
+
+
+-rw-r--r-- 1 root root 45940 Nov 11 23:26 /home/claude/dk/build/DONKEYK.HEX
+FLASH GATE OK: 16700 <= 30592 (loader settings page at 0x7780)
+[1] Geometry
+  min girder-to-girder spacing in overlap = 6 px (Mario needs 5+1)
+  ok:   Mario fits between every pair of girders
+  ok:   all ladders lie fully on both girders they join
+  ladder lengths 6..8 px
+  ok:   girder surfaces never step more than 1 px
+[2] Title / help / controls screens
+  ok:   B opens controls screen
+  ok:   A returns from controls
+  ok:   A starts a game
+  ok:   READY -> PLAY after 2 s
+[3] Jump physics
+  apex = 7 px, air time = 16 frames (0.64 s)
+  ok:   apex 5-8 px (clears a 4 px barrel)
+  ok:   lands exactly back on girder
+[4] Barrel flow (no Mario)
+  level 1 (100-frame spacing): 56 barrels completed route, life 122..499 frames, max alive 5
+  ok:   barrels reach the oil drum and disappear
+  ok:   barrels only ever move downward (5->0)
+  ok:   no barrel gets stuck
+  ok:   barrel trip time sane at level 1
+  level 8 (30-frame spacing): trip 83..280 frames, max alive 8 (cap 8)
+  ok:   level 8 barrels are faster (shorter worst-case trip)
+[5] Route to Pauline (no barrels), ladder climbing
+  reached Pauline in 149 frames (6.0 s)
+  ok:   every level reachable by ladders; touching Pauline wins
+  ok:   rescue awards 1000 + bonus
+  score after rescue = 1900 (bonus 900)
+  ok:   next level starts after rescue, difficulty up
+[6] Death / lives / game over / high score
+  standing still: died 3 times, game over after 1447 frames (58 s)
+  ok:   idle player eventually loses all lives
+  ok:   three lives consumed (2 mid-game + final)
+  ok:   high score updated to 300
+  ok:   high score written to EEPROM (magic present)
+  ok:   A after game over restarts
+[7] Pause + exit paths
+  ok:   C pauses
+  ok:   C resumes
+  ok:   C on title calls changeGame() -> loader
+[8] Autoplay bot (jumps barrels, climbs) - playability sanity
+  bot cleared level 1 in 30/30 attempts (single life budget varies), best score 1920
+  ok:   level 1 is beatable by a simple jump-and-climb strategy
+  ok:   jump-over-barrel scoring works
+
+ALL TESTS PASSED (0 failures)
+Loaded 16672 .text at address 0x0
+Loaded 28 .data
+title: frames drawn=68
+after B: state=1 (1=HELP)
+after A: state=0 (0=TITLE)
+after A: state=2 (2=READY) lives=3
+state=2 (3=PLAY)
+bot: reached Pauline=1 deaths=0 score=1910 lvl=1
+frame busy time (library getCpuLoad basis): avg 59.9 ms, max 61.0 ms of 40 ms budget (25 fps)
+stack high-water: SP min=0x08b7 -> peak stack use 72 bytes (RAMEND 0x08FF)
+CPU still running, total emulated 16.0 s, LCD frames 495
+build/DONKEYK.INF 1137 bytes
+/home/claude/Gamebuino-Games-Compilation/INVADERS.INF -> version 1 name 'INVADERS' slides 2 size 785 OK
+build/DONKEYK.INF -> version 1 name 'DONKEY KONG' slides 3 size 1137 OK
