@@ -65,7 +65,7 @@ int main(int argc,char**argv){
       if(mode==2) mask=K_U;
       else if(lev<6){ int best=-1,bd=999; for(int i=0;i<11;i++) if(LAD[i][0]==lev){ int d=abs(LAD[i][1]-c); if(d<bd){bd=d;best=i;} }
         int cx=LAD[best][1]; mask=(abs(cx-c)<=1)?K_U:((cx>c)?K_R:K_L);
-        if(mode==0) for(int i=0;i<8;i++){ unsigned long b=A_bar+i*7; if(r8(b+4)==1 && r8(b+3)==lev){ int bc=(((int16_t)r16(b))>>3)+2; int d=bc-c; int dir=(lev&1)?1:-1; if(d*dir<0 && abs(d)<=7 && abs(d)>=4) mask|=K_A; } }
+        if(mode==0) for(int i=0;i<8;i++){ unsigned long b=A_bar+i*8; if(r8(b+4)==1 && r8(b+3)==lev){ int bc=(((int16_t)r16(b))>>3)+2; int d=bc-c; int dir=(lev&1)?1:-1; if(d*dir<0 && abs(d)<=7 && abs(d)>=4) mask|=K_A; } }
       } else mask=K_R;
       if(shots<2 && mode==1 && lev==1){ /* captured next frame */ }
     }

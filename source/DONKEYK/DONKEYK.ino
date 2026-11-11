@@ -64,33 +64,39 @@ const uint8_t spr_mario_climb1[] PROGMEM = {5,5, 0x70,0xF8,0x70,0x70,0xC0};
 //   .XXX.
 //   ...XX
 const uint8_t spr_mario_climb2[] PROGMEM = {5,5, 0x70,0xF8,0x70,0x70,0x18};
-//   ...XXXXXX...
-//   ..XXXXXXXX..
-//   ..X.XXXX.X..
-//   ..XXX..XXX..
-//   .XXXXXXXXXX.
-//   XXXXXXXXXXXX
-//   XX.XXXXXX.XX
-//   XX..XXXX..XX
-const uint8_t spr_dk_idle[] PROGMEM = {12,8, 0x1F,0x80,0x3F,0xC0,0x2F,0x40,0x39,0xC0,0x7F,0xE0,0xFF,0xF0,0xDF,0xB0,0xCF,0x30};
-//   XX.XXXXXX.XX
-//   XX.XXXXXX.XX
-//   XX.X.XX.X.XX
-//   XXXXX..XXXXX
-//   .XXXXXXXXXX.
-//   ..XXXXXXXX..
-//   ..XXXXXXXX..
-//   ..XXX..XXX..
-const uint8_t spr_dk_grab[] PROGMEM = {12,8, 0xDF,0xB0,0xDF,0xB0,0xD6,0xB0,0xF9,0xF0,0x7F,0xE0,0x3F,0xC0,0x3F,0xC0,0x39,0xC0};
-//   ...XXXXXX...
-//   ..XXXXXXXX..
-//   ..X.XXXX.X..
-//   ..XXX..XXXXX
-//   .XXXXXXXXXXX
-//   XXXXXXXXXXXX
-//   XX.XXXXXX.XX
-//   XX..XXXX..XX
-const uint8_t spr_dk_throw[] PROGMEM = {12,8, 0x1F,0x80,0x3F,0xC0,0x2F,0x40,0x39,0xF0,0x7F,0xF0,0xFF,0xF0,0xDF,0xB0,0xCF,0x30};
+//   ....XXXXXX....
+//   ...XXXXXXXX...
+//   ..XXXXXXXXXX..
+//   ..XXX.XX.XXX..
+//   ..XX......XX..
+//   ..XXX.XX.XXX..
+//   XXXXXXXXXXXXXX
+//   XXXXXXXXXXXXXX
+//   XXX.XXXXXX.XXX
+//   XX..XXXXXX..XX
+const uint8_t spr_dk_idle[] PROGMEM = {14,10, 0x0F,0xC0,0x1F,0xE0,0x3F,0xF0,0x3B,0x70,0x30,0x30,0x3B,0x70,0xFF,0xFC,0xFF,0xFC,0xEF,0xDC,0xCF,0xCC};
+//   XX..XXXXXX..XX
+//   XX.XXXXXXXX.XX
+//   XXXXXXXXXXXXXX
+//   XXXXX.XX.XXXXX
+//   ..XX......XX..
+//   ..XXX.XX.XXX..
+//   ..XXXXXXXXXX..
+//   ..XXXXXXXXXX..
+//   ..XXXX..XXXX..
+//   ..XXX....XXX..
+const uint8_t spr_dk_beat[] PROGMEM = {14,10, 0xCF,0xCC,0xDF,0xEC,0xFF,0xFC,0xFB,0x7C,0x30,0x30,0x3B,0x70,0x3F,0xF0,0x3F,0xF0,0x3C,0xF0,0x38,0x70};
+//   ....XXXXXX....
+//   ...XXXXXXXX...
+//   ..XXXXXXXXXX..
+//   ..XXX.XX.XXX..
+//   ..XX......XX..
+//   ..XXX.XX.XXXXX
+//   XXXXXXXXXXXXXX
+//   XXXXXXXXXXXXXX
+//   XXX.XXXXXX.XXX
+//   XX..XXXXXX..XX
+const uint8_t spr_dk_throw[] PROGMEM = {14,10, 0x0F,0xC0,0x1F,0xE0,0x3F,0xF0,0x3B,0x70,0x30,0x30,0x3B,0x7C,0xFF,0xFC,0xFF,0xFC,0xEF,0xDC,0xCF,0xCC};
 //   .......XXXXXXXXXX.......
 //   .....XXXXXXXXXXXXXX.....
 //   ....XXXXXXXXXXXXXXXX....
@@ -128,6 +134,42 @@ const uint8_t spr_barrel2[] PROGMEM = {4,4, 0x60,0xF0,0xD0,0x60};
 //   X.XX
 //   .XX.
 const uint8_t spr_barrel3[] PROGMEM = {4,4, 0x60,0xF0,0xB0,0x60};
+//   XXXX
+//   X..X
+//   X..X
+//   XXXX
+const uint8_t spr_barrelw0[] PROGMEM = {4,4, 0xF0,0x90,0x90,0xF0};
+//   XXXX
+//   XXXX
+//   X..X
+//   XXXX
+const uint8_t spr_barrelw1[] PROGMEM = {4,4, 0xF0,0xF0,0x90,0xF0};
+//   .X..
+//   XX.X
+//   XXXX
+//   XXXX
+//   .XX.
+const uint8_t spr_fire0[] PROGMEM = {4,5, 0x40,0xD0,0xF0,0xF0,0x60};
+//   ..X.
+//   X.XX
+//   XXXX
+//   XXXX
+//   .XX.
+const uint8_t spr_fire1[] PROGMEM = {4,5, 0x20,0xB0,0xF0,0xF0,0x60};
+//   XXX.
+//   XXX.
+//   .X..
+//   .X..
+const uint8_t spr_ham_item[] PROGMEM = {4,4, 0xE0,0xE0,0x40,0x40};
+//   ..XX
+//   XXXX
+//   ..XX
+const uint8_t spr_ham_dn[] PROGMEM = {4,3, 0x30,0xF0,0x30};
+//   XXX
+//   XXX
+//   .X.
+//   .X.
+const uint8_t spr_ham_up[] PROGMEM = {3,4, 0xE0,0xE0,0x40,0x40};
 //   .XXX.
 //   .X.X.
 //   ..X.X
@@ -173,6 +215,10 @@ const uint8_t spr_icon[] PROGMEM = {3,3, 0xE0,0x60,0xE0};
 #define PAULINE_X      48
 
 #define EE_MAGIC       0xD4
+#define MAXF           2          // max simultaneous fireballs
+#define BONUS_START    3500       // time bonus; -100 per second; 0 = Mario dies
+#define HAMMER_FRAMES  230        // ~9 s of hammer
+#define HAM_SPD        8
 
 // game states
 enum { S_TITLE, S_HELP, S_READY, S_PLAY, S_DYING, S_WIN, S_PAUSE, S_OVER };
@@ -180,6 +226,8 @@ enum { S_TITLE, S_HELP, S_READY, S_PLAY, S_DYING, S_WIN, S_PAUSE, S_OVER };
 enum { M_WALK, M_JUMP, M_CLIMB };
 // barrel states
 enum { B_OFF, B_ROLL, B_FALL, B_LADDER };
+// fireball states
+enum { F_OFF, F_WALK, F_UP, F_DOWN };
 
 // ---- level geometry (PROGMEM) -------------------------------------------
 const uint8_t GBASE[NGIRD] PROGMEM = { 46, 39, 32, 25, 18, 11 };
@@ -194,6 +242,9 @@ const uint8_t LADDERS[NLAD][2] PROGMEM = {
   {4, 62}, {4, 26},
   {5, 36}
 };
+
+// Hammers: {girder level, x}
+const uint8_t HAMMERS[2][2] PROGMEM = { {2, 78}, {4, 7} };
 
 // Title screen: Mario hop arc
 const uint8_t HOP[14] PROGMEM = { 0,1,3,4,5,5,5,5,5,4,3,1,0,0 };
@@ -211,6 +262,8 @@ struct Mario {
   uint8_t left;      // facing left?
   uint8_t anim;
   uint8_t lad;       // ladder index when climbing
+  uint8_t ham;       // hammer frames left
+  uint8_t combo;     // barrels jumped in this jump
 };
 
 struct Barrel {
@@ -220,10 +273,22 @@ struct Barrel {
   uint8_t st;
   uint8_t lad;       // last ladder index tested (+1)
   uint8_t scored;
+  uint8_t wild;      // wild barrel: faster, always takes ladders
+};
+
+struct Fire {
+  int16_t x8;        // left edge, 1/8 px
+  int8_t  y;         // top row
+  uint8_t lev;
+  uint8_t st;
+  uint8_t lad;
+  uint8_t t;         // re-think timer
+  int8_t  dir;
 };
 
 Mario  m;
 Barrel bar[MAXB];
+Fire   fire[MAXF];
 
 uint8_t  state;
 uint8_t  timer;            // generic state timer
@@ -238,6 +303,9 @@ uint8_t  newHi;
 uint8_t  extraLife;
 uint8_t  pauseDelay;
 uint16_t winBonus;
+uint8_t  bonusT;           // frames since last bonus tick
+uint8_t  hamTaken;         // bit per hammer
+uint8_t  timeUp;
 
 // =====================================================================
 //  Level geometry helpers
@@ -308,11 +376,13 @@ static void clearRect(int8_t x, int8_t y, int8_t w, int8_t h) {
 // =====================================================================
 static void startLife() {
   for (uint8_t i = 0; i < MAXB; i++) bar[i].st = B_OFF;
+  for (uint8_t i = 0; i < MAXF; i++) fire[i].st = F_OFF;
+  hamTaken = 0; m.ham = 0; m.combo = 0; bonusT = 0; timeUp = 0;
   m.lev = 0; m.mode = M_WALK; m.vy = 0; m.vx = 0; m.left = 0; m.anim = 0;
   m.x8 = START_X * 8;
   m.y8 = surf(0, START_X + 2) * 8;
   spawnT = 45; throwT = 0;
-  bonus = 1000 + 100 * (lvl < 10 ? lvl : 10);
+  bonus = BONUS_START;
   state = S_READY; timer = FPS * 2;
 }
 static void newGame() {
@@ -329,23 +399,39 @@ static void gameOver() {
 // =====================================================================
 //  Barrels
 // =====================================================================
-static uint8_t barrelSpeed() { return 6 + (lvl < 7 ? lvl : 7); }              // 1/8 px/frame
-static uint8_t spawnGap()    { uint8_t g = (lvl < 7) ? 100 - 10 * lvl : 30; return g; }
+static uint8_t barrelSpeed() { return 8 + (lvl < 5 ? lvl : 5); }               // 9..13  (1/8 px/frame)
+static uint8_t spawnGap()    { return (lvl < 5) ? 78 - 10 * lvl : 28; }
+
+static void maybeSpawnFire() {                       // oil drum flares up
+  uint8_t active = 0;
+  for (uint8_t i = 0; i < MAXF; i++) if (fire[i].st) active++;
+  if (active >= ((lvl < 3) ? 1 : MAXF)) return;
+  uint8_t chance = 35 + 10 * lvl; if (chance > 90) chance = 90;
+  if (random(100) >= chance) return;
+  for (uint8_t i = 0; i < MAXF; i++) if (fire[i].st == F_OFF) {
+    fire[i].st = F_WALK; fire[i].lev = 0; fire[i].x8 = 6 * 8; fire[i].dir = 1;
+    fire[i].lad = 0; fire[i].t = 20; fire[i].y = surf(0, 8) - 5;
+    sfx(2, 4);
+    return;
+  }
+}
 
 static void spawnBarrel() {
   for (uint8_t i = 0; i < MAXB; i++) if (bar[i].st == B_OFF) {
     bar[i].st = B_ROLL; bar[i].lev = 5; bar[i].lad = 0; bar[i].scored = 0;
-    bar[i].x8 = 22 * 8;
-    bar[i].y  = surf(5, 24) - 4;
+    bar[i].wild = (lvl >= 2 && random(100) < 20);
+    bar[i].x8 = 24 * 8;
+    bar[i].y  = surf(5, 26) - 4;
     return;
   }
 }
 
 static void updateBarrels() {
-  uint8_t spd = barrelSpeed();
+  uint8_t spd0 = barrelSpeed();
   for (uint8_t i = 0; i < MAXB; i++) {
     Barrel &b = bar[i];
     if (b.st == B_OFF) continue;
+    uint8_t spd = b.wild ? spd0 + spd0 / 2 : spd0;
     int8_t cx = (b.x8 >> 3) + 2;                    // centre x
 
     if (b.st == B_ROLL) {
@@ -353,7 +439,7 @@ static void updateBarrels() {
       cx = (b.x8 >> 3) + 2;
       b.y = surf(b.lev, cx) - 4;
 
-      if (b.lev == 0 && cx <= 3) { b.st = B_OFF; continue; }       // into the oil drum
+      if (b.lev == 0 && cx <= 3) { b.st = B_OFF; maybeSpawnFire(); continue; }   // into the oil drum
       if (b.lev > 0) {
         if ((rollDir(b.lev) > 0 && cx > xmax(b.lev)) ||
             (rollDir(b.lev) < 0 && cx < xmin(b.lev))) { b.st = B_FALL; continue; }
@@ -363,7 +449,8 @@ static void updateBarrels() {
           int8_t d = cx - (int8_t)ladX(k);
           if (d >= -1 && d <= 1 && b.lad != k + 1) {
             b.lad = k + 1;
-            uint8_t chance = 15 + 8 * lvl; if (chance > 50) chance = 50;
+            uint8_t chance = 25 + 8 * lvl; if (chance > 60) chance = 60;
+            if (b.wild) chance = 100;
             if (random(100) < chance) {
               b.st = B_LADDER;
               b.x8 = ((int16_t)ladX(k) - 2) * 8;
@@ -378,13 +465,54 @@ static void updateBarrels() {
       int8_t s = surf(b.lev - 1, cx);
       if (b.y + 4 >= s) {
         b.lev--; b.y = s - 4; b.st = B_ROLL; b.lad = 0;
-        if (b.lev == 0 && cx <= 3) b.st = B_OFF;
+        if (b.lev == 0 && cx <= 3) { b.st = B_OFF; maybeSpawnFire(); }
       }
     } else { // B_LADDER
       b.y += 1;
       int8_t s = surf(b.lev - 1, cx);
       if (b.y + 4 >= s) {
         b.lev--; b.y = s - 4; b.st = B_ROLL; b.lad = 0;
+      }
+    }
+  }
+}
+
+// =====================================================================
+//  Fireballs: leave the oil drum, wander, and climb ladders towards Mario
+// =====================================================================
+static int8_t marioCx();
+static void updateFires() {
+  uint8_t spd = 5 + (lvl > 6 ? 3 : lvl / 2);
+  for (uint8_t i = 0; i < MAXF; i++) {
+    Fire &f = fire[i];
+    if (f.st == F_OFF) continue;
+    int8_t cx = (f.x8 >> 3) + 2;
+    if (f.st == F_WALK) {
+      f.x8 += f.dir * spd; cx = (f.x8 >> 3) + 2;
+      if (cx < xmin(f.lev) + 2 || cx > xmax(f.lev) - 2) { f.dir = -f.dir; f.x8 += f.dir * spd * 2; cx = (f.x8 >> 3) + 2; }
+      f.y = surf(f.lev, cx) - 5;
+      if (f.t) f.t--;
+      else {
+        f.t = 25 + random(40);
+        int8_t toward = (marioCx() > cx) ? 1 : -1;
+        f.dir = (random(100) < 70) ? toward : -toward;
+      }
+      if (f.lad && (cx - (int8_t)ladX(f.lad - 1) > 3 || cx - (int8_t)ladX(f.lad - 1) < -3)) f.lad = 0;
+      for (uint8_t k = 0; k < NLAD; k++) {
+        if (ladG(k) == 5) continue;                        // never to Pauline's ledge
+        int8_t d = cx - (int8_t)ladX(k);
+        if (d < -1 || d > 1 || f.lad == k + 1) continue;
+        f.lad = k + 1;
+        if (ladG(k) == f.lev && m.lev > f.lev && random(100) < 65) { f.st = F_UP;   f.x8 = ((int16_t)ladX(k) - 2) * 8; }
+        else if (ladG(k) + 1 == f.lev && m.lev < f.lev && random(100) < 45) { f.st = F_DOWN; f.x8 = ((int16_t)ladX(k) - 2) * 8; }
+      }
+    } else if (gb.frameCount & 1) {                       // climbing: half-speed
+      if (f.st == F_UP) {
+        f.y--;
+        if (f.y + 5 <= surf(f.lev + 1, cx)) { f.lev++; f.y = surf(f.lev, cx) - 5; f.st = F_WALK; }
+      } else {
+        f.y++;
+        if (f.y + 5 >= surf(f.lev - 1, cx)) { f.lev--; f.y = surf(f.lev, cx) - 5; f.st = F_WALK; }
       }
     }
   }
@@ -418,12 +546,14 @@ static void updateMario() {
   if (m.mode == M_WALK) {
     m.vx = dx;                                   // also used as 'is walking' flag
     if (dx) {
-      m.x8 += dx * WALK_SPD; m.left = (dx < 0);
+      m.x8 += dx * (m.ham ? HAM_SPD : WALK_SPD); m.left = (dx < 0);
       clampMario(); m.anim++;
     }
     m.y8 = surf(m.lev, marioCx()) * 8;
-    if (gb.buttons.pressed(BTN_A) || gb.buttons.pressed(BTN_B)) {
-      m.mode = M_JUMP; m.vy = -JUMP_V; m.vx = dx;
+    if (m.ham) {
+      /* swinging the hammer: no jumping, no ladders */
+    } else if (gb.buttons.pressed(BTN_A) || gb.buttons.pressed(BTN_B)) {
+      m.mode = M_JUMP; m.vy = -JUMP_V; m.vx = dx; m.combo = 0;
       sfx(24, 3);
     } else if (U || D) {
       int8_t k = -1;
@@ -442,7 +572,7 @@ static void updateMario() {
     m.x8 += m.vx * WALK_SPD; clampMario();
     m.y8 += m.vy; m.vy += GRAVITY;
     int16_t floorY = (int16_t)surf(m.lev, marioCx()) * 8;
-    if (m.vy > 0 && m.y8 >= floorY) { m.y8 = floorY; m.mode = M_WALK; sfx(8, 1); }
+    if (m.vy > 0 && m.y8 >= floorY) { m.y8 = floorY; m.mode = M_WALK; m.combo = 0; sfx(8, 1); }
   } else { // M_CLIMB
     int8_t dy = (D ? 1 : 0) - (U ? 1 : 0);
     if (dy) {
@@ -459,14 +589,17 @@ static void updateMario() {
 // =====================================================================
 //  Collision / scoring
 // =====================================================================
-static bool hitBarrel() {
+static bool ov(int8_t ax, int8_t ay, int8_t aw, int8_t ah, int8_t bx, int8_t by, int8_t bw, int8_t bh) {
+  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+}
+
+static bool hitHazard() {
   int8_t footY = m.y8 >> 3;
   int8_t mx = (m.x8 >> 3) + 1, my = footY - 4;               // 3x4 hit-box
-  for (uint8_t i = 0; i < MAXB; i++) {
-    if (bar[i].st == B_OFF) continue;
-    int8_t bx = (bar[i].x8 >> 3) + 1, by = bar[i].y + 1;      // 2x3 hit-box
-    if (mx < bx + 2 && mx + 3 > bx && my < by + 3 && my + 4 > by) return true;
-  }
+  for (uint8_t i = 0; i < MAXB; i++)
+    if (bar[i].st != B_OFF && ov(mx, my, 3, 4, (bar[i].x8 >> 3) + 1, bar[i].y + 1, 3, 3)) return true;
+  for (uint8_t i = 0; i < MAXF; i++)
+    if (fire[i].st != F_OFF && ov(mx, my, 3, 4, (fire[i].x8 >> 3) + 1, fire[i].y + 1, 2, 4)) return true;
   return false;
 }
 
@@ -477,10 +610,36 @@ static void scoreJumps() {
     Barrel &b = bar[i];
     if (b.st != B_ROLL || b.scored || b.lev != m.lev) continue;
     int8_t d = cx - ((b.x8 >> 3) + 2);
-    if (d >= -3 && d <= 3 && footY <= b.y + 1) {                 // feet above the barrel's top
-      b.scored = 1; addScore(100); sfx(30, 2);
+    if (d >= -3 && d <= 3 && footY <= b.y + 1) {             // feet above the barrel's top
+      b.scored = 1;
+      addScore(m.combo == 0 ? 100 : (m.combo == 1 ? 300 : 800));   // arcade-style combo
+      if (m.combo < 2) m.combo++;
+      sfx(30 + m.combo, 2);
     }
   }
+}
+
+static void pickAndSwingHammer() {
+  if (m.mode == M_WALK && !m.ham) {
+    for (uint8_t i = 0; i < 2; i++) {
+      if ((hamTaken & (1 << i)) || m.lev != pgm_read_byte(&HAMMERS[i][0])) continue;
+      int8_t d = marioCx() - ((int8_t)pgm_read_byte(&HAMMERS[i][1]) + 2);
+      if (d >= -3 && d <= 3) { hamTaken |= 1 << i; m.ham = HAMMER_FRAMES; sfx(28, 5); }
+    }
+  }
+  if (!m.ham) return;
+  m.ham--;
+  if ((m.ham & 15) == 0) sfx(5 + (m.ham >> 4 & 1) * 3, 1);
+  int8_t x0 = m.x8 >> 3, fy = m.y8 >> 3;
+  int8_t zx = m.left ? x0 - 5 : x0, zy = fy - 6;             // 10 x 7 smash zone in front
+  for (uint8_t i = 0; i < MAXB; i++)
+    if (bar[i].st != B_OFF && ov(zx, zy, 10, 7, bar[i].x8 >> 3, bar[i].y, 4, 4)) {
+      bar[i].st = B_OFF; addScore(300); sfx(34, 2);
+    }
+  for (uint8_t i = 0; i < MAXF; i++)
+    if (fire[i].st != F_OFF && ov(zx, zy, 10, 7, fire[i].x8 >> 3, fire[i].y, 4, 5)) {
+      fire[i].st = F_OFF; addScore(500); sfx(35, 3);
+    }
 }
 
 // =====================================================================
@@ -517,6 +676,12 @@ static void drawMario(bool visible) {
   int8_t x = m.x8 >> 3, y = (m.y8 >> 3) - MARIO_H;
   if (m.left && m.mode != M_CLIMB) gb.display.drawBitmap(x, y, s, NOROT, FLIPH);
   else gb.display.drawBitmap(x, y, s);
+  if (m.ham && (m.ham > 40 || (m.ham & 4))) {                 // hammer (blinks when running out)
+    if (gb.frameCount & 4) {
+      if (m.left) gb.display.drawBitmap(x - 3, y + 1, spr_ham_dn, NOROT, FLIPH);
+      else        gb.display.drawBitmap(x + 4, y + 1, spr_ham_dn);
+    } else gb.display.drawBitmap(x + 1, y - 3, spr_ham_up);
+  }
 }
 
 static void drawScene(bool marioVisible) {
@@ -529,16 +694,26 @@ static void drawScene(bool marioVisible) {
   if (gb.frameCount & 4) { gb.display.drawPixel(2, 39); gb.display.drawPixel(3, 40); gb.display.drawPixel(2, 40); }
   else                   { gb.display.drawPixel(3, 39); gb.display.drawPixel(2, 40); gb.display.drawPixel(3, 40); }
 
+  // hammer pick-ups
+  for (uint8_t i = 0; i < 2; i++) if (!(hamTaken & (1 << i))) {
+    int8_t hx = pgm_read_byte(&HAMMERS[i][1]);
+    gb.display.drawBitmap(hx, surf(pgm_read_byte(&HAMMERS[i][0]), hx + 2) - 4, spr_ham_item);
+  }
+
   // DK's barrel stack (3 upright barrels) and Donkey Kong
   gb.display.drawBitmap(0, 7, spr_barrel0);
   gb.display.drawBitmap(4, 7, spr_barrel0);
   gb.display.drawBitmap(2, 3, spr_barrel0);
   const uint8_t* dk = spr_dk_idle;
+  bool grab = (spawnT < 14 && state == S_PLAY);
   if (throwT) dk = spr_dk_throw;
-  else if (spawnT < 14 && state == S_PLAY) dk = spr_dk_grab;
-  else if (gb.frameCount & 16) dk = spr_dk_grab;
-  gb.display.drawBitmap(9, 3, dk);
-  if (spawnT < 14 && state == S_PLAY && !throwT) gb.display.drawBitmap(21, 7, spr_barrel0);
+  else if (grab || (gb.frameCount & 16)) dk = spr_dk_beat;     // chest-beating
+  int8_t dky = 1 + ((state == S_READY && (gb.frameCount & 4)) ? 1 : 0);   // stomps while the level starts
+  gb.display.drawBitmap(9, dky, dk);
+  if (grab && !throwT) gb.display.drawBitmap(23, 6, spr_barrel0);
+
+  // Pauline calls for help
+  if (state != S_WIN && (gb.frameCount & 32)) text(27, 0, F("HELP!"));
 
   // Pauline
   gb.display.drawBitmap(PAULINE_X, 0, (gb.frameCount & 8) ? spr_pauline0 : spr_pauline1);
@@ -549,8 +724,11 @@ static void drawScene(bool marioVisible) {
     uint8_t f = (gb.frameCount >> 2) & 3;
     if (rollDir(bar[i].lev) < 0) f = 3 - f;
     const uint8_t* s = (f == 0) ? spr_barrel0 : (f == 1) ? spr_barrel1 : (f == 2) ? spr_barrel2 : spr_barrel3;
+    if (bar[i].wild) s = (f & 1) ? spr_barrelw0 : spr_barrelw1;
     gb.display.drawBitmap(bar[i].x8 >> 3, bar[i].y, s);
   }
+  for (uint8_t i = 0; i < MAXF; i++)
+    if (fire[i].st) gb.display.drawBitmap(fire[i].x8 >> 3, fire[i].y, (gb.frameCount & 2) ? spr_fire0 : spr_fire1);
 
   drawMario(marioVisible);
 
@@ -558,6 +736,8 @@ static void drawScene(bool marioVisible) {
   gb.display.drawBitmap(57, 0, spr_icon);
   gb.display.drawChar(61, 0, '0' + lives, 1);
   drawNum(64, 0, score, 5);
+  // bonus timer bar
+  if (bonus > 500 || (gb.frameCount & 4)) gb.display.drawFastHLine(58, 6, bonus / 150 + 1);
 }
 
 // overlay box helper
@@ -604,7 +784,7 @@ static void doHelp() {
   text(0, 19, F("A OR B: JUMP"));
   text(0, 25, F("C: PAUSE"));
   text(0, 31, F("HOLD C+A: LOADER"));
-  text(0, 37, F("JUMP BARRELS +100"));
+  text(0, 37, F("JUMP 100+ HAMMER 300"));
   if ((gb.frameCount & 31) < 22) text(0, 43, F("SAVE PAULINE! A:BACK"));
   if (gb.buttons.pressed(BTN_A) || gb.buttons.pressed(BTN_B) || gb.buttons.pressed(BTN_C)) {
     gb.sound.playTick(); state = S_TITLE;
@@ -625,21 +805,29 @@ static void doPlay() {
 
   updateMario();
   updateBarrels();
+  updateFires();
+  pickAndSwingHammer();
 
   // Donkey Kong throws
   if (throwT) throwT--;
   if (spawnT) spawnT--;
   else {
     spawnBarrel(); throwT = 8; sfx(6, 2);
-    uint8_t g = spawnGap();
-    spawnT = g + random(20);
+    spawnT = spawnGap() + random(24);
+    if (lvl >= 3 && random(100) < 20) spawnT = 14;        // two in a row
   }
 
   scoreJumps();
 
-  if ((gb.frameCount & 7) == 0 && bonus) bonus -= (bonus >= 10) ? 10 : bonus;
+  // bonus timer: -100 per second, zero = time up
+  if (++bonusT >= FPS) {
+    bonusT = 0;
+    if (bonus >= 100) bonus -= 100;
+    if (bonus <= 500 && bonus) sfx(26, 1);
+  }
 
-  if (hitBarrel()) {                       // ouch
+  if (bonus == 0) { timeUp = 1; state = S_DYING; timer = 60; m.mode = M_WALK; m.ham = 0; drawScene(true); return; }
+  if (!m.ham && hitHazard()) {              // ouch
     state = S_DYING; timer = 60; m.mode = M_WALK;
     drawScene(true);
     return;
@@ -657,6 +845,7 @@ static void doPlay() {
 
 static void doDying() {
   drawScene((timer & 4) == 0);
+  if (timeUp) { box(18, 20, 48, 10); textC(23, F("TIME UP!")); }
   if (timer % 6 == 0) sfx(24 - (60 - timer) / 4, 3);
   if (--timer == 0) {
     if (lives > 0) lives--;

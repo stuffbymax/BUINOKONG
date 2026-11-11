@@ -11,12 +11,12 @@ ART = {
 "mario_jump":  ["XXXXX",".X.XX","XXXX.",".XXX.","X...X"],
 "mario_climb1":[".XXX.","XXXXX",".XXX.",".XXX.","XX..."],
 "mario_climb2":[".XXX.","XXXXX",".XXX.",".XXX.","...XX"],
-"dk_idle":  ["...XXXXXX...","..XXXXXXXX..","..X.XXXX.X..","..XXX..XXX..",
-             ".XXXXXXXXXX.","XXXXXXXXXXXX","XX.XXXXXX.XX","XX..XXXX..XX"],
-"dk_grab":  ["XX.XXXXXX.XX","XX.XXXXXX.XX","XX.X.XX.X.XX","XXXXX..XXXXX",
-             ".XXXXXXXXXX.","..XXXXXXXX..","..XXXXXXXX..","..XXX..XXX.."],
-"dk_throw": ["...XXXXXX...","..XXXXXXXX..","..X.XXXX.X..","..XXX..XXXXX",
-             ".XXXXXXXXXXX","XXXXXXXXXXXX","XX.XXXXXX.XX","XX..XXXX..XX"],
+"dk_idle":  ["....XXXXXX....","...XXXXXXXX...","..XXXXXXXXXX..","..XXX.XX.XXX..","..XX......XX..",
+             "..XXX.XX.XXX..","XXXXXXXXXXXXXX","XXXXXXXXXXXXXX","XXX.XXXXXX.XXX","XX..XXXXXX..XX"],
+"dk_beat":  ["XX..XXXXXX..XX","XX.XXXXXXXX.XX","XXXXXXXXXXXXXX","XXXXX.XX.XXXXX","..XX......XX..",
+             "..XXX.XX.XXX..","..XXXXXXXXXX..","..XXXXXXXXXX..","..XXXX..XXXX..","..XXX....XXX.."],
+"dk_throw": ["....XXXXXX....","...XXXXXXXX...","..XXXXXXXXXX..","..XXX.XX.XXX..","..XX......XX..",
+             "..XXX.XX.XXXXX","XXXXXXXXXXXXXX","XXXXXXXXXXXXXX","XXX.XXXXXX.XXX","XX..XXXXXX..XX"],
 "dk_big": [
  ".......XXXXXXXXXX.......",
  ".....XXXXXXXXXXXXXX.....",
@@ -38,6 +38,13 @@ ART = {
 "barrel1": [".XX.","XX.X","XXXX",".XX."],
 "barrel2": [".XX.","XXXX","XX.X",".XX."],
 "barrel3": [".XX.","XXXX","X.XX",".XX."],
+"barrelw0":["XXXX","X..X","X..X","XXXX"],
+"barrelw1":["XXXX","XXXX","X..X","XXXX"],
+"fire0":   [".X..","XX.X","XXXX","XXXX",".XX."],
+"fire1":   ["..X.","X.XX","XXXX","XXXX",".XX."],
+"ham_item":["XXX.","XXX.",".X..",".X.."],
+"ham_dn":  ["..XX","XXXX","..XX"],
+"ham_up":  ["XXX","XXX",".X.",".X."],
 "pauline0":[".XXX.",".X.X.","..X.X",".XXX.","XXXXX"],
 "pauline1":[".XXX.",".X.XX","..XX.",".XXX.","XXXXX"],
 "drum":    ["XXXXXX","X....X","X.XX.X","X....X","X....X","XXXXXX"],
@@ -66,18 +73,20 @@ def emit():
 
 def png(path):
     from PIL import Image
-    S=10; cell=[]; x=2
-    names=list(ART)
-    W=sum(len(ART[n][0])+2 for n in names)+2; H=14
-    im=Image.new("L",(W*S,H*S),200)
-    x=2
+    S=8; names=list(ART); MAXW=60
+    placed=[]; x=1; y=1; rowh=0
     for n in names:
+        w=len(ART[n][0]); h=len(ART[n])
+        if x+w+1>MAXW: x=1; y+=rowh+2; rowh=0
+        placed.append((n,x,y)); x+=w+2; rowh=max(rowh,h)
+    H=y+rowh+2
+    im=Image.new("L",(MAXW*S,H*S),200)
+    for n,x0,y0 in placed:
         for j,r in enumerate(ART[n]):
             for i,c in enumerate(r):
                 if c=='X':
                     for a in range(S):
-                        for b in range(S): im.putpixel(((x+i)*S+a,(2+j)*S+b),0)
-        x+=len(ART[n][0])+2
+                        for b in range(S): im.putpixel(((x0+i)*S+a,(y0+j)*S+b),0)
     im.save(path)
 
 if __name__=="__main__":

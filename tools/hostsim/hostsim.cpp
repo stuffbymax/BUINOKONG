@@ -103,7 +103,7 @@ int main(){
     newGame(); for(int i=0;i<60;i++) step(); 
     int f=0; int shots=0;
     while(state!=S_WIN && f<2000){
-      for(int i=0;i<MAXB;i++) bar[i].st=B_OFF; spawnT=200;     // keep the level empty
+      for(int i=0;i<MAXB;i++) bar[i].st=B_OFF; for(int i=0;i<MAXF;i++) fire[i].st=F_OFF; spawnT=200;     // keep the level empty
       int mask=0;
       if(m.mode==M_CLIMB){ mask=K_U; }
       else if(m.lev<LEDGE){
@@ -146,33 +146,88 @@ int main(){
     reset(); state=S_TITLE; step(); step(K_C); CHECK(gb.wantLoader,"C on title calls changeGame() -> loader");
   }
 
-  printf("[8] Autoplay bot (jumps barrels, climbs) - playability sanity\n");
-  {
-    int wins=0,tot=0; unsigned maxScore=0;
-    for(int run=0;run<30;run++){
-      srand(100+run); reset(); newGame(); lvl=1; int f=0; uint8_t startLives=lives; (void)startLives;
-      while(state!=S_OVER && state!=S_WIN && f<6000){
+  printf("[8] Autoplay bot (perfect-timing barrel jumper, never uses hammer) by level\n");
+  for(int L=1;L<=4;L+=1){
+    int wins=0,tot=0,deathsAll=0; unsigned best=0;
+    for(int run=0;run<40;run++){
+      srand(100+run+L*1000); reset(); newGame(); lvl=L; startLife(); int f=0; uint8_t startLives=lives;
+      while(state!=S_OVER && state!=S_WIN && f<8000 && lives==startLives){
         int mask=0;
         if(state==S_PLAY){
           if(m.mode==M_CLIMB) mask=K_U;
           else if(m.lev<LEDGE){
-            int best=-1,bd=999; for(int i=0;i<NLAD;i++) if(ladG(i)==m.lev){ int d=abs(ladX(i)-marioCx()); if(d<bd){bd=d;best=i;} }
-            int cx=ladX(best),c=marioCx(); int dirx=(cx>c)?1:-1;
+            int best_=-1,bd=999; for(int i=0;i<NLAD;i++) if(ladG(i)==m.lev){ int d=abs(ladX(i)-marioCx()); if(d<bd){bd=d;best_=i;} }
+            int cx=ladX(best_),c=marioCx(); int dirx=(cx>c)?1:-1;
             if(abs(cx-c)<=1) mask=K_U; else mask=(dirx>0)?K_R:K_L;
-            // dodge: jump when a rolling barrel on this level is about to reach us
-            if(m.mode==M_WALK) for(int i=0;i<MAXB;i++) if(bar[i].st==B_ROLL&&bar[i].lev==m.lev){
-              int d=((bar[i].x8>>3)+2)-c; int bd2=rollDir(bar[i].lev);
-              if(d*bd2<0 && abs(d)<=7 && abs(d)>=4) mask|=K_A;   // barrel moving toward us
-            }
+            if(m.mode==M_WALK){ for(int i=0;i<MAXB;i++) if(bar[i].st==B_ROLL&&bar[i].lev==m.lev){
+                int d=((bar[i].x8>>3)+2)-c; int bd2=rollDir(bar[i].lev);
+                if(d*bd2<0 && abs(d)<=7 && abs(d)>=4) mask|=K_A; }
+              for(int i=0;i<MAXF;i++) if(fire[i].st==F_WALK&&fire[i].lev==m.lev){ int d=((fire[i].x8>>3)+2)-c; if(abs(d)>=4&&abs(d)<=7) mask|=K_A; } }
           } else mask=K_R;
         }
         step(mask); f++;
       }
-      tot++; if(state==S_WIN) wins++; if(score>maxScore)maxScore=score;
+      tot++; if(state==S_WIN) wins++; if(lives<startLives||state==S_OVER) deathsAll++; if(score>best)best=score;
     }
-    printf("  bot cleared level 1 in %d/%d attempts (single life budget varies), best score %u\n",wins,tot,maxScore);
-    CHECK(wins>=1,"level 1 is beatable by a simple jump-and-climb strategy");
-    CHECK(maxScore>=100,"jump-over-barrel scoring works");
+    printf("  level %d: bot rescued Pauline on its FIRST life in %2d/%d runs (died %d)\n",L,wins,tot,deathsAll);
+    if(L==1) CHECK(wins<tot,"level 1 is no longer a guaranteed clear for a perfect-timing bot");
+    if(L==4) CHECK(wins<=tot/2,"by level 4 a perfect-timing bot fails at least half the time");
+  }
+
+  printf("[9] Hammer\n");
+  {
+    reset(); newGame(); lvl=2; startLife(); for(int i=0;i<60;i++) step();
+    // teleport Mario next to hammer 0 (level 2, x=78)
+    m.lev=2; m.x8=76*8; m.y8=surf(2,78)*8; m.mode=M_WALK;
+    for(int i=0;i<MAXB;i++) bar[i].st=B_OFF; spawnT=250;
+    step(); CHECK(m.ham>0,"walking over a hammer picks it up"); CHECK(hamTaken&1,"hammer item is consumed");
+    // put a barrel in front of Mario and let him smash it
+    unsigned sc0=score; bar[0].st=B_ROLL; bar[0].lev=2; bar[0].wild=0; bar[0].scored=0; bar[0].x8=(((m.x8>>3)+10))*8; bar[0].y=surf(2,88)-4;   // ahead of Mario, rolling towards him (level 2 rolls left)
+    int died=0; for(int i=0;i<30;i++){ step(); if(state!=S_PLAY) died=1; }
+    CHECK(!died,"Mario survives while swinging the hammer"); CHECK(bar[0].st==B_OFF&&score>=sc0+300,"hammer smashes a barrel for +300");
+    // can't jump or climb with hammer
+    uint8_t ml=m.mode; step(K_A); CHECK(m.mode==ml&&m.mode!=M_JUMP,"no jumping while holding the hammer");
+    for(int i=0;i<HAMMER_FRAMES+5;i++){ spawnT=250; for(int k=0;k<MAXB;k++) bar[k].st=B_OFF; step(); }
+    CHECK(m.ham==0,"hammer runs out");
+  }
+  printf("[10] Fireballs\n");
+  {
+    reset(); newGame(); lvl=3; startLife(); for(int i=0;i<60;i++) step();
+    for(int i=0;i<MAXB;i++) bar[i].st=B_OFF; spawnT=250;
+    srand(7); int spawned=0; for(int t=0;t<200&&!spawned;t++){ maybeSpawnFire(); for(int i=0;i<MAXF;i++) if(fire[i].st) spawned=1; }
+    CHECK(spawned,"drum can release a fireball");
+    // Mario parked on level 3: fire should come up to meet him
+    m.lev=3; m.x8=40*8; m.y8=surf(3,42)*8; m.mode=M_WALK; int reached=0, maxlev=0; int x8min=9999,x8max=0;
+    for(int f=0;f<2500;f++){ spawnT=250; for(int k=0;k<MAXB;k++) bar[k].st=B_OFF; m.mode=M_WALK; m.lev=3; m.x8=40*8; m.y8=surf(3,42)*8; m.ham=0;
+      gb.frameCount++; updateFires(); for(int i=0;i<MAXF;i++) if(fire[i].st){ if(fire[i].lev>maxlev)maxlev=fire[i].lev; if(fire[i].lev==3)reached=1; int x=fire[i].x8>>3; if(x<x8min)x8min=x; if(x>x8max)x8max=x; } }
+    printf("  fire reached level %d (max), x-range %d..%d\n",maxlev,x8min,x8max);
+    CHECK(reached,"fireball climbs ladders towards Mario");
+    CHECK(maxlev<LEDGE,"fireball never climbs to Pauline's ledge");
+    CHECK(x8min>=0&&x8max<=84,"fireball stays on screen");
+  }
+  printf("[11] Time-up and combo scoring\n");
+  {
+    reset(); newGame(); lvl=1; startLife(); for(int i=0;i<60;i++) step();
+    for(int i=0;i<MAXB;i++) bar[i].st=B_OFF; for(int i=0;i<MAXF;i++) fire[i].st=F_OFF; spawnT=250; bonus=200;
+    uint8_t l0=lives; int f=0; while(state==S_PLAY&&f<200){ spawnT=250; step(); f++; }
+    CHECK(state==S_DYING&&timeUp,"bonus timer reaching 0 kills Mario");
+    for(int i=0;i<70;i++) step(); CHECK(lives==l0-1,"time-up costs a life");
+    // combo: 100 then 300
+    reset(); newGame(); lvl=1; startLife(); for(int i=0;i<60;i++) step(); score=0;
+    m.combo=0; m.mode=M_JUMP; m.lev=0; m.y8=(surf(0,30)-6)*8; m.x8=28*8; m.vy=0;
+    bar[0].st=B_ROLL; bar[0].lev=0; bar[0].scored=0; bar[0].x8=28*8; bar[0].y=surf(0,30)-4;
+    bar[1].st=B_ROLL; bar[1].lev=0; bar[1].scored=0; bar[1].x8=30*8; bar[1].y=surf(0,30)-4;
+    scoreJumps(); CHECK(score==100+300,"jumping two barrels in one jump scores 100 + 300");
+  }
+  { // staged frame for a visual check
+    reset(); newGame(); lvl=3; startLife(); for(int i=0;i<60;i++) step();
+    for(int i=0;i<MAXB;i++) bar[i].st=B_OFF; spawnT=250; bonus=2100;
+    m.lev=2; m.x8=60*8; m.y8=surf(2,62)*8; m.mode=M_WALK; m.ham=150; m.left=0;
+    bar[0]=Barrel{ (int16_t)(40*8),(int8_t)(surf(3,42)-4),3,B_ROLL,0,0,1 };
+    bar[1]=Barrel{ (int16_t)(20*8),(int8_t)(surf(1,22)-4),1,B_ROLL,0,0,0 };
+    bar[2]=Barrel{ (int16_t)(66*8),(int8_t)(surf(4,66)-4),4,B_ROLL,0,0,0 };
+    fire[0].st=F_WALK; fire[0].lev=0; fire[0].x8=30*8; fire[0].dir=1; fire[0].y=surf(0,32)-5;
+    gb.frameCount=64+8; gb.display.clear(); drawScene(true); shot("10_action");
   }
   printf("\n%s (%d failures)\n",fails?"SOME TESTS FAILED":"ALL TESTS PASSED",fails);
   return fails?1:0;

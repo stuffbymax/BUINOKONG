@@ -28,15 +28,15 @@ AVR Memory Usage
 ----------------
 Device: atmega328p
 
-Program:   16700 bytes (51.0% Full)
+Program:   19362 bytes (59.1% Full)
 (.text + .data + .bootloader)
 
-Data:        776 bytes (37.9% Full)
+Data:        805 bytes (39.3% Full)
 (.data + .bss + .noinit)
 
 
--rw-r--r-- 1 root root 45940 Nov 11 23:26 /home/claude/dk/build/DONKEYK.HEX
-FLASH GATE OK: 16700 <= 30592 (loader settings page at 0x7780)
+-rw-r--r-- 1 root root 53268 Nov 11 23:40 /home/claude/dk/build/DONKEYK.HEX
+FLASH GATE OK: 19362 <= 30592 (loader settings page at 0x7780)
 [1] Geometry
   min girder-to-girder spacing in overlap = 6 px (Mario needs 5+1)
   ok:   Mario fits between every pair of girders
@@ -53,21 +53,21 @@ FLASH GATE OK: 16700 <= 30592 (loader settings page at 0x7780)
   ok:   apex 5-8 px (clears a 4 px barrel)
   ok:   lands exactly back on girder
 [4] Barrel flow (no Mario)
-  level 1 (100-frame spacing): 56 barrels completed route, life 122..499 frames, max alive 5
+  level 1 (100-frame spacing): 58 barrels completed route, life 160..393 frames, max alive 4
   ok:   barrels reach the oil drum and disappear
   ok:   barrels only ever move downward (5->0)
   ok:   no barrel gets stuck
   ok:   barrel trip time sane at level 1
-  level 8 (30-frame spacing): trip 83..280 frames, max alive 8 (cap 8)
+  level 8 (30-frame spacing): trip 83..237 frames, max alive 7 (cap 8)
   ok:   level 8 barrels are faster (shorter worst-case trip)
 [5] Route to Pauline (no barrels), ladder climbing
   reached Pauline in 149 frames (6.0 s)
   ok:   every level reachable by ladders; touching Pauline wins
   ok:   rescue awards 1000 + bonus
-  score after rescue = 1900 (bonus 900)
+  score after rescue = 3900 (bonus 2900)
   ok:   next level starts after rescue, difficulty up
 [6] Death / lives / game over / high score
-  standing still: died 3 times, game over after 1447 frames (58 s)
+  standing still: died 3 times, game over after 1128 frames (45 s)
   ok:   idle player eventually loses all lives
   ok:   three lives consumed (2 mid-game + final)
   ok:   high score updated to 300
@@ -77,23 +77,43 @@ FLASH GATE OK: 16700 <= 30592 (loader settings page at 0x7780)
   ok:   C pauses
   ok:   C resumes
   ok:   C on title calls changeGame() -> loader
-[8] Autoplay bot (jumps barrels, climbs) - playability sanity
-  bot cleared level 1 in 30/30 attempts (single life budget varies), best score 1920
-  ok:   level 1 is beatable by a simple jump-and-climb strategy
-  ok:   jump-over-barrel scoring works
+[8] Autoplay bot (perfect-timing barrel jumper, never uses hammer) by level
+  level 1: bot rescued Pauline on its FIRST life in 17/40 runs (died 23)
+  ok:   level 1 is no longer a guaranteed clear for a perfect-timing bot
+  level 2: bot rescued Pauline on its FIRST life in  8/40 runs (died 32)
+  level 3: bot rescued Pauline on its FIRST life in 10/40 runs (died 30)
+  level 4: bot rescued Pauline on its FIRST life in  8/40 runs (died 32)
+  ok:   by level 4 a perfect-timing bot fails at least half the time
+[9] Hammer
+  ok:   walking over a hammer picks it up
+  ok:   hammer item is consumed
+  ok:   Mario survives while swinging the hammer
+  ok:   hammer smashes a barrel for +300
+  ok:   no jumping while holding the hammer
+  ok:   hammer runs out
+[10] Fireballs
+  ok:   drum can release a fireball
+  fire reached level 3 (max), x-range 0..73
+  ok:   fireball climbs ladders towards Mario
+  ok:   fireball never climbs to Pauline's ledge
+  ok:   fireball stays on screen
+[11] Time-up and combo scoring
+  ok:   bonus timer reaching 0 kills Mario
+  ok:   time-up costs a life
+  ok:   jumping two barrels in one jump scores 100 + 300
 
 ALL TESTS PASSED (0 failures)
-Loaded 16672 .text at address 0x0
+Loaded 19334 .text at address 0x0
 Loaded 28 .data
 title: frames drawn=68
 after B: state=1 (1=HELP)
 after A: state=0 (0=TITLE)
 after A: state=2 (2=READY) lives=3
 state=2 (3=PLAY)
-bot: reached Pauline=1 deaths=0 score=1910 lvl=1
-frame busy time (library getCpuLoad basis): avg 59.9 ms, max 61.0 ms of 40 ms budget (25 fps)
-stack high-water: SP min=0x08b7 -> peak stack use 72 bytes (RAMEND 0x08FF)
-CPU still running, total emulated 16.0 s, LCD frames 495
+bot: reached Pauline=1 deaths=0 score=4000 lvl=1
+frame busy time (library getCpuLoad basis): avg 60.7 ms, max 62.3 ms of 40 ms budget (25 fps)
+stack high-water: SP min=0x08b3 -> peak stack use 76 bytes (RAMEND 0x08FF)
+CPU still running, total emulated 16.2 s, LCD frames 495
 build/DONKEYK.INF 1137 bytes
 /home/claude/Gamebuino-Games-Compilation/INVADERS.INF -> version 1 name 'INVADERS' slides 2 size 785 OK
 build/DONKEYK.INF -> version 1 name 'DONKEY KONG' slides 3 size 1137 OK
