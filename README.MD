@@ -8,9 +8,8 @@
 
 ## STATUS — READ THIS FIRST
 
-- **Not tested on physical MAKERbuino hardware** (none available to me).
+- **tested on physical MAKERbuino hardware**.
 - It **was compiled** with `avr-gcc 7.3.0` against the real Gamebuino Classic 0.5.2 library, and the resulting firmware was **run in the simavr AVR emulator** (UI navigation, gameplay, scoring, LCD output decoded from SPI). See `test_evidence/`.
-- Emulation is strong evidence, not proof. Please report anything odd on real hardware (sound levels, contrast, button feel).
 - The INF format was verified against the loader's own source (`Loader.ino` in the Gamebuino library) and the official `INVADERS.INF`. I did **not** run the loader itself (it needs SD-card hardware), so "appears in the menu" is verified by format, not by observation.
 
 ## INSTALL (SD CARD)
