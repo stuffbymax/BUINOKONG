@@ -1,4 +1,4 @@
-// Runs the REAL compiled DONKEYK firmware in simavr (ATmega328P @16MHz), emulates the
+// Runs the REAL compiled BUINOKON firmware in simavr (ATmega328P @16MHz), emulates the
 // PCD8544 LCD from the SPI stream, drives the D-pad/A/B/C pins, reads game RAM for a bot.
 // Build: gcc avrsim.c -o avrsim -lsimavr -lelf
 #include <simavr/sim_avr.h>
@@ -54,7 +54,7 @@ int main(int argc,char**argv){
   setkeys(K_A); runms(120); setkeys(0); runms(600); shot("ready"); printf("after A: state=%d (2=READY) lives=%d\n",r8(A_state),r8(A_lives));
   runms(2000); printf("state=%d (3=PLAY)\n",r8(A_state));
   // ---- reactive bot on the real firmware (same strategy as host bot), measure frame time
-  static const int LAD[11][2]={{0,62},{0,28},{1,16},{1,52},{2,66},{2,30},{3,14},{3,50},{4,62},{4,26},{5,36}};
+  static const int LAD[7][2]={{0,66},{0,24},{1,14},{1,54},{2,70},{2,30},{3,46}};
   int maxdur=0; long sumdur=0,nd=0; int sawWin=0,deaths=0,prevLives=r8(A_lives); unsigned maxScore=0; int shots=0;
   sampling=1;
   for(int step=0; step<4000 && !sawWin; step++){          // 20 ms steps = 80 s emulated
@@ -63,10 +63,10 @@ int main(int argc,char**argv){
     if(st==3){
       int x8=(int16_t)r16(A_m); int lev=r8(A_m+7), mode=r8(A_m+8); int c=(x8>>3)+2;
       if(mode==2) mask=K_U;
-      else if(lev<6){ int best=-1,bd=999; for(int i=0;i<11;i++) if(LAD[i][0]==lev){ int d=abs(LAD[i][1]-c); if(d<bd){bd=d;best=i;} }
+      else if(lev<4){ int best=-1,bd=999; for(int i=0;i<7;i++) if(LAD[i][0]==lev){ int d=abs(LAD[i][1]-c); if(d<bd){bd=d;best=i;} }
         int cx=LAD[best][1]; mask=(abs(cx-c)<=1)?K_U:((cx>c)?K_R:K_L);
         if(mode==0) for(int i=0;i<8;i++){ unsigned long b=A_bar+i*8; if(r8(b+4)==1 && r8(b+3)==lev){ int bc=(((int16_t)r16(b))>>3)+2; int d=bc-c; int dir=(lev&1)?1:-1; if(d*dir<0 && abs(d)<=7 && abs(d)>=4) mask|=K_A; } }
-      } else mask=K_R;
+      } else mask=K_L;
       if(shots<2 && mode==1 && lev==1){ /* captured next frame */ }
     }
     setkeys(mask); runms(20);

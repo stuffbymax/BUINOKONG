@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write DONKEYK.INF in the Gamebuino Classic loader format (verified against
+"""Write BUINOKON.INF in the Gamebuino Classic loader format (verified against
 Loader.ino from the Gamebuino library and the official INVADERS.INF):
   'gbinf',0x00 | version 0x01 | name[18]+NUL | icon 19x18 (3 B/row) | nslides |
   slides 84x32 (11 B/row, 352 B each).   Bit 1 = black pixel, MSB = leftmost."""
@@ -38,4 +38,4 @@ def main(out, name, slides):
     open(out,"wb").write(data); print(out,len(data),"bytes")
 if __name__=="__main__":
     b="/home/claude/dk/build/"
-    main(sys.argv[1],"DONKEY KONG",[(b+"avr_title.pbm",0),(b+"avr_play.pbm",0),(b+"avr_help.pbm",0)])
+    main(sys.argv[1],"BUINOKONG",[(b+"avr_title.pbm",0),(b+"avr_play.pbm",0),(b+"avr_help.pbm",0)])

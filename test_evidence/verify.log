@@ -1,5 +1,5 @@
 In file included from /home/claude/dk/../Gamebuino/Gamebuino.h:28:0,
-                 from /home/claude/dk/build/sketch/DONKEYK.cpp:23:
+                 from /home/claude/dk/build/sketch/BUINOKON.cpp:22:
 /home/claude/dk/../Gamebuino/utility/Display.h: In member function 'void Display::drawPixel(int8_t, int8_t)':
 /home/claude/dk/../Gamebuino/utility/Display.h:184:55: warning: suggest parentheses around comparison in operand of '^' [-Wparentheses]
    if(((frameCount & 0x01) ^ ((x & 0x01) ^ (y & 0x01)) == 0)){ //alternative checkers pattern
@@ -28,20 +28,20 @@ AVR Memory Usage
 ----------------
 Device: atmega328p
 
-Program:   19362 bytes (59.1% Full)
+Program:   19742 bytes (60.2% Full)
 (.text + .data + .bootloader)
 
-Data:        805 bytes (39.3% Full)
+Data:        806 bytes (39.4% Full)
 (.data + .bss + .noinit)
 
 
--rw-r--r-- 1 root root 53268 Nov 11 23:40 /home/claude/dk/build/DONKEYK.HEX
-FLASH GATE OK: 19362 <= 30592 (loader settings page at 0x7780)
+-rw-r--r-- 1 root root 54316 Nov 13 02:17 /home/claude/dk/build/BUINOKON.HEX
+FLASH GATE OK: 19742 <= 30592 (loader settings page at 0x7780)
 [1] Geometry
-  min girder-to-girder spacing in overlap = 6 px (Mario needs 5+1)
+  min girder-to-girder spacing in overlap = 7 px (Mario needs 6+1)
   ok:   Mario fits between every pair of girders
   ok:   all ladders lie fully on both girders they join
-  ladder lengths 6..8 px
+  ladder lengths 7..11 px
   ok:   girder surfaces never step more than 1 px
 [2] Title / help / controls screens
   ok:   B opens controls screen
@@ -49,25 +49,25 @@ FLASH GATE OK: 19362 <= 30592 (loader settings page at 0x7780)
   ok:   A starts a game
   ok:   READY -> PLAY after 2 s
 [3] Jump physics
-  apex = 7 px, air time = 16 frames (0.64 s)
-  ok:   apex 5-8 px (clears a 4 px barrel)
+  apex = 8 px, air time = 17 frames (0.68 s)
+  ok:   apex 6-9 px (clears a 5 px barrel)
   ok:   lands exactly back on girder
 [4] Barrel flow (no Mario)
-  level 1 (100-frame spacing): 58 barrels completed route, life 160..393 frames, max alive 4
+  level 1 (100-frame spacing): 59 barrels completed route, life 56..253 frames, max alive 3
   ok:   barrels reach the oil drum and disappear
   ok:   barrels only ever move downward (5->0)
   ok:   no barrel gets stuck
   ok:   barrel trip time sane at level 1
-  level 8 (30-frame spacing): trip 83..237 frames, max alive 7 (cap 8)
+  level 8 (30-frame spacing): trip 56..180 frames, max alive 5 (cap 8)
   ok:   level 8 barrels are faster (shorter worst-case trip)
-[5] Route to Pauline (no barrels), ladder climbing
-  reached Pauline in 149 frames (6.0 s)
-  ok:   every level reachable by ladders; touching Pauline wins
+[5] Route to Luna (no barrels), ladder climbing
+  reached Luna in 105 frames (4.2 s)
+  ok:   every level reachable by ladders; touching Luna wins
   ok:   rescue awards 1000 + bonus
-  score after rescue = 3900 (bonus 2900)
+  score after rescue = 4100 (bonus 3100)
   ok:   next level starts after rescue, difficulty up
 [6] Death / lives / game over / high score
-  standing still: died 3 times, game over after 1128 frames (45 s)
+  standing still: died 3 times, game over after 883 frames (35 s)
   ok:   idle player eventually loses all lives
   ok:   three lives consumed (2 mid-game + final)
   ok:   high score updated to 300
@@ -78,24 +78,27 @@ FLASH GATE OK: 19362 <= 30592 (loader settings page at 0x7780)
   ok:   C resumes
   ok:   C on title calls changeGame() -> loader
 [8] Autoplay bot (perfect-timing barrel jumper, never uses hammer) by level
-  level 1: bot rescued Pauline on its FIRST life in 17/40 runs (died 23)
+  level 1: bot rescued Luna on its FIRST life in 21/40 runs (died 19)
   ok:   level 1 is no longer a guaranteed clear for a perfect-timing bot
-  level 2: bot rescued Pauline on its FIRST life in  8/40 runs (died 32)
-  level 3: bot rescued Pauline on its FIRST life in 10/40 runs (died 30)
-  level 4: bot rescued Pauline on its FIRST life in  8/40 runs (died 32)
+  level 2: bot rescued Luna on its FIRST life in 14/40 runs (died 26)
+  level 3: bot rescued Luna on its FIRST life in 10/40 runs (died 30)
+  level 4: bot rescued Luna on its FIRST life in  3/40 runs (died 37)
   ok:   by level 4 a perfect-timing bot fails at least half the time
-[9] Hammer
+[9] Hammer (B to swing)
   ok:   walking over a hammer picks it up
   ok:   hammer item is consumed
+  ok:   carrying does NOT swing by itself (B required)
+  ok:   a barrel still kills Mario if B is not held
+  ok:   hammer energy drains only while swinging
   ok:   Mario survives while swinging the hammer
   ok:   hammer smashes a barrel for +300
-  ok:   no jumping while holding the hammer
-  ok:   hammer runs out
+  ok:   no jumping while swinging
+  ok:   hammer runs out after ~9 s of swinging
 [10] Fireballs
   ok:   drum can release a fireball
   fire reached level 3 (max), x-range 0..73
   ok:   fireball climbs ladders towards Mario
-  ok:   fireball never climbs to Pauline's ledge
+  ok:   fireball never climbs to Luna's ledge
   ok:   fireball stays on screen
 [11] Time-up and combo scoring
   ok:   bonus timer reaching 0 kills Mario
@@ -103,17 +106,17 @@ FLASH GATE OK: 19362 <= 30592 (loader settings page at 0x7780)
   ok:   jumping two barrels in one jump scores 100 + 300
 
 ALL TESTS PASSED (0 failures)
-Loaded 19334 .text at address 0x0
+Loaded 19714 .text at address 0x0
 Loaded 28 .data
-title: frames drawn=68
+title: frames drawn=70
 after B: state=1 (1=HELP)
 after A: state=0 (0=TITLE)
 after A: state=2 (2=READY) lives=3
 state=2 (3=PLAY)
-bot: reached Pauline=1 deaths=0 score=4000 lvl=1
-frame busy time (library getCpuLoad basis): avg 60.7 ms, max 62.3 ms of 40 ms budget (25 fps)
-stack high-water: SP min=0x08b3 -> peak stack use 76 bytes (RAMEND 0x08FF)
-CPU still running, total emulated 16.2 s, LCD frames 495
-build/DONKEYK.INF 1137 bytes
+bot: reached Pauline=1 deaths=0 score=4100 lvl=1
+frame busy time (library getCpuLoad basis): avg 2.8 ms, max 9.3 ms of 40 ms budget (25 fps)
+stack high-water: SP min=0x08b2 -> peak stack use 77 bytes (RAMEND 0x08FF)
+CPU still running, total emulated 14.5 s, LCD frames 408
+build/BUINOKON.INF 1137 bytes
 /home/claude/Gamebuino-Games-Compilation/INVADERS.INF -> version 1 name 'INVADERS' slides 2 size 785 OK
-build/DONKEYK.INF -> version 1 name 'DONKEY KONG' slides 3 size 1137 OK
+build/BUINOKON.INF -> version 1 name 'BUINOKONG' slides 3 size 1137 OK
